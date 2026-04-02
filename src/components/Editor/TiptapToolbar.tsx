@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEditorState } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import {
@@ -16,6 +16,7 @@ import {
   Heading2,
   Heading3,
   Highlighter,
+  Image as ImageIcon,
   Italic,
   Link2,
   List,
@@ -31,6 +32,7 @@ import {
   Underline as UnderlineIcon,
   Unlink
 } from 'lucide-react';
+import { getImageSizeErrorMessage, insertImageFromFile } from './imageUpload';
 
 interface TiptapToolbarProps {
   editor: Editor;
@@ -63,6 +65,8 @@ function ToolbarButton({ active = false, disabled = false, icon, label, onClick 
 }
 
 export function TiptapToolbar({ editor }: TiptapToolbarProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const editorState = useEditorState({
     editor,
     selector: ({ editor: currentEditor }) => ({
@@ -76,6 +80,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       canToggleOrderedList: currentEditor.can().chain().focus().toggleOrderedList().run(),
       canToggleTaskList: currentEditor.can().chain().focus().toggleTaskList().run(),
       hasTable: currentEditor.isActive('table'),
+      hasImage: currentEditor.isActive('image'),
       isAlignCenter: currentEditor.isActive({ textAlign: 'center' }),
       isAlignJustify: currentEditor.isActive({ textAlign: 'justify' }),
       isAlignLeft: currentEditor.isActive({ textAlign: 'left' }),
@@ -122,8 +127,46 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
     editor.chain().focus().extendMarkRange('link').setLink({ href: normalizedHref }).run();
   };
 
+  const handleInsertImageUrl = () => {
+    const nextSource = window.prompt('Enter an image URL', 'https://');
+    if (nextSource === null) {
+      return;
+    }
+
+    const normalizedSource = nextSource.trim();
+    if (!normalizedSource) {
+      return;
+    }
+
+    editor.chain().focus().setImage({ src: normalizedSource, alt: 'Inserted image' }).run();
+  };
+
+  const handleImageInputChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      try {
+        await insertImageFromFile(editor, file);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : getImageSizeErrorMessage());
+      }
+    }
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="editor-toolbar glass-panel">
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(event) => void handleImageInputChange(event)}
+      />
+
       <div className="editor-toolbar__group">
         <select
           aria-label="Text style"
@@ -289,6 +332,20 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           icon={<Unlink size={16} />}
           label="Remove link"
           onClick={() => editor.chain().focus().unsetLink().run()}
+        />
+      </div>
+
+      <div className="editor-toolbar__group">
+        <ToolbarButton
+          active={editorState.hasImage}
+          icon={<ImageIcon size={16} />}
+          label="Upload image"
+          onClick={() => imageInputRef.current?.click()}
+        />
+        <ToolbarButton
+          icon={<Link2 size={16} />}
+          label="Insert image from URL"
+          onClick={handleInsertImageUrl}
         />
       </div>
 

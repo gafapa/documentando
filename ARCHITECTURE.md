@@ -15,9 +15,10 @@ PeerScribe is a static React application. The browser owns editor state, persist
 - `src/components/Editor/Workspace.tsx`
   - Mounts Tiptap.
   - Connects the editor to Yjs document fragments and awareness.
-  - Enforces the clipboard image size guard.
+  - Renders custom remote carets and collaborative selections.
+  - Enforces the embedded-image size guard for paste and drag-and-drop flows.
 - `src/components/Editor/TiptapToolbar.tsx`
-  - Renders formatting actions for headings, marks, alignment, lists, tables, colors, and links.
+  - Renders formatting actions for headings, marks, alignment, lists, tables, colors, links, and image insertion.
 - `src/services/collaboration.ts`
   - Creates the Yjs document.
   - Creates the awareness instance used by Tiptap collaboration carets.
@@ -62,6 +63,7 @@ PeerScribe is a static React application. The browser owns editor state, persist
 - Tiptap collaboration carets consume a minimal provider object that exposes `awareness`.
 - Presence is derived from awareness states and keyed by stable Yjs client IDs.
 - Remote awareness states are removed when peer connections close so the participant list stays accurate.
+- The editor renders remote cursor markers, name chips, and tinted text selections so active collaborators are visible inside the document surface.
 
 ## File Processing Flow
 
@@ -77,6 +79,10 @@ PeerScribe is a static React application. The browser owns editor state, persist
   - capture the editor DOM subtree
   - load `html2pdf.js` on demand
   - generate and save the PDF locally
+- image insertion:
+  - upload, paste, drag, or reference an image URL from the editor
+  - convert local files to base64 data URLs in the browser
+  - keep embedded image payloads below 500 KB to avoid degrading peer-to-peer sync
 
 ## Deployment Notes
 

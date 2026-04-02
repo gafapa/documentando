@@ -69,12 +69,16 @@ If `VITE_PEER_HOST` is not set, PeerJS defaults are used automatically.
 - DOCX import goes through Mammoth and replaces content through the Tiptap command layer.
 - DOCX export is served from the app bundle and generated locally in the browser.
 - PDF export is generated locally from the editor DOM.
+- Images can be inserted from local files, pasted from the clipboard, dragged into the document, or added by URL.
+- Embedded images are limited to 500 KB to keep peer-to-peer sessions responsive.
 
 ## Editing Features
 
 - Headings, block quotes, code blocks, inline code, highlights, and text color
 - Links, alignment controls, horizontal rules, lists, and task lists
 - Collaborative tables with insert, row, column, and delete controls
+- Embedded images with resize handles and client-side storage
+- Remote cursor labels and tinted collaborative selections for active collaborators
 
 ## Project Docs
 

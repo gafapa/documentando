@@ -275,6 +275,25 @@ button {
   text-underline-offset: 2px;
 }
 
+.ProseMirror img {
+  display: block;
+  max-width: min(100%, 760px);
+  width: auto;
+  height: auto;
+  margin: 1.4rem auto;
+  border-radius: 18px;
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.ProseMirror img.editor-embedded-image {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.96));
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
 .ProseMirror hr {
   border: none;
   border-top: 1px solid rgba(148, 163, 184, 0.5);
@@ -334,28 +353,71 @@ button {
   pointer-events: none;
 }
 
-.collaboration-cursor__caret {
+.collaboration-selection {
+  background: color-mix(in srgb, var(--collaboration-user-color) 22%, white);
+  border-radius: 6px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
   position: relative;
-  margin-left: -1px;
-  margin-right: -1px;
-  border-left: 2px solid var(--primary-dark);
-  border-right: 2px solid var(--primary-dark);
-  word-break: normal;
+}
+
+.collaboration-selection::before {
+  content: '';
+  position: absolute;
+  inset: -1px 0;
+  border-top: 1px solid color-mix(in srgb, var(--collaboration-user-color) 65%, white);
+  border-bottom: 1px solid color-mix(in srgb, var(--collaboration-user-color) 65%, white);
+  opacity: 0.45;
   pointer-events: none;
+}
+
+.collaboration-cursor {
+  position: relative;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.collaboration-cursor__marker {
+  position: absolute;
+  left: -2px;
+  top: -0.2em;
+  bottom: -0.2em;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--collaboration-user-color);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.95),
+    0 0 0 4px color-mix(in srgb, var(--collaboration-user-color) 18%, white);
 }
 
 .collaboration-cursor__label {
   position: absolute;
-  top: -1.45em;
-  left: -1px;
-  padding: 0.18rem 0.45rem;
+  top: -2.25rem;
+  left: -0.35rem;
+  padding: 0.28rem 0.6rem;
   border-radius: 999px;
   color: white;
+  background: color-mix(in srgb, var(--collaboration-user-color) 82%, #0f172a);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
   user-select: none;
+  transform-origin: left bottom;
+  animation: collaboration-label-pop 140ms ease-out;
+}
+
+@keyframes collaboration-label-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 900px) {
@@ -376,5 +438,12 @@ button {
   .ProseMirror {
     min-height: 70vh;
     padding: 32px 24px;
+  }
+
+  .collaboration-cursor__label {
+    top: -2rem;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
