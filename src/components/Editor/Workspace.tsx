@@ -37,7 +37,10 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, awareness, onEditorR
       return;
     }
 
-    const quill = new Quill(editorRef.current, {
+    const editorElement = editorRef.current;
+    editorElement.innerHTML = '';
+
+    const quill = new Quill(editorElement, {
       theme: 'snow',
       modules: {
         toolbar: [
@@ -67,11 +70,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, awareness, onEditorR
       bindingRef.current?.destroy();
       bindingRef.current = null;
       quillRef.current = null;
+      editorElement.innerHTML = '';
     };
   }, [awareness, onEditorReady, yDoc]);
 
   return (
-    <div style={{ width: '100%', paddingBottom: '40px' }}>
+    <div className="editor-shell">
       <div ref={editorRef} id="pdf-export-container" />
     </div>
   );
