@@ -3,22 +3,26 @@ import { useI18n } from '../../i18n';
 
 interface LanguageSelectProps {
   inline?: boolean;
-  showLabel?: boolean;
 }
 
+const languageIcons: Record<string, string> = {
+  es: '🇪🇸',
+  gl: '🟦',
+  en: '🇬🇧',
+  fr: '🇫🇷',
+  pt: '🇵🇹',
+  de: '🇩🇪',
+  ca: '🟨',
+  eu: '🟥',
+};
+
 export const LanguageSelect: React.FC<LanguageSelectProps> = ({
-  inline = false,
-  showLabel = true,
+  inline = true,
 }) => {
   const { locale, setLocale, languages, t } = useI18n();
 
   return (
     <label className={`language-picker${inline ? ' language-picker--inline' : ''}`}>
-      {showLabel && (
-        <span className="language-picker__label">
-          {t.languageLabel}
-        </span>
-      )}
       <select
         className="language-picker__select"
         value={locale}
@@ -27,7 +31,7 @@ export const LanguageSelect: React.FC<LanguageSelectProps> = ({
       >
         {languages.map((language) => (
           <option key={language.value} value={language.value}>
-            {language.label}
+            {`${languageIcons[language.value] ?? '🌐'} ${language.label}`}
           </option>
         ))}
       </select>

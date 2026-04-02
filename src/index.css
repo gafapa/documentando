@@ -63,8 +63,9 @@ button {
 
 .language-picker {
   display: inline-flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
 }
 
 .language-picker--inline {
@@ -79,7 +80,7 @@ button {
 }
 
 .language-picker__select {
-  min-width: 132px;
+  min-width: 154px;
   padding: 9px 12px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 10px;

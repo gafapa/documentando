@@ -122,7 +122,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <LogOut size={16} /> {t.leaveDocument}
         </motion.button>
 
-        <LanguageSelect inline showLabel={false} />
+        <LanguageSelect inline />
       </div>
     </motion.div>
   );
