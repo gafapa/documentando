@@ -32,7 +32,8 @@ import {
   Underline as UnderlineIcon,
   Unlink
 } from 'lucide-react';
-import { getImageSizeErrorMessage, insertImageFromFile } from './imageUpload';
+import { useI18n } from '../../i18n';
+import { insertImageFromFile } from './imageUpload';
 
 interface TiptapToolbarProps {
   editor: Editor;
@@ -65,13 +66,14 @@ function ToolbarButton({ active = false, disabled = false, icon, label, onClick 
 }
 
 export function TiptapToolbar({ editor }: TiptapToolbarProps) {
+  const { t } = useI18n();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editorState = useEditorState({
     editor,
     selector: ({ editor: currentEditor }) => ({
       canInsertTable: currentEditor.can().chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-      canSetLink: currentEditor.can().chain().focus().setLink({ href: 'https://example.com' }).run(),
+      canSetLink: currentEditor.can().chain().focus().setLink({ href: t.linkDefault }).run(),
       canToggleBlockquote: currentEditor.can().chain().focus().toggleBlockquote().run(),
       canToggleBold: currentEditor.can().chain().focus().toggleBold().run(),
       canToggleBulletList: currentEditor.can().chain().focus().toggleBulletList().run(),
@@ -113,7 +115,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
         : 'paragraph';
 
   const handleSetLink = () => {
-    const nextHref = window.prompt('Enter a URL', editorState.linkHref ?? 'https://');
+    const nextHref = window.prompt(t.linkPrompt, editorState.linkHref ?? t.linkDefault);
     if (nextHref === null) {
       return;
     }
@@ -128,7 +130,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
   };
 
   const handleInsertImageUrl = () => {
-    const nextSource = window.prompt('Enter an image URL', 'https://');
+    const nextSource = window.prompt(t.imageUrlPrompt, t.imageUrlDefault);
     if (nextSource === null) {
       return;
     }
@@ -138,7 +140,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       return;
     }
 
-    editor.chain().focus().setImage({ src: normalizedSource, alt: 'Inserted image' }).run();
+    editor.chain().focus().setImage({ src: normalizedSource, alt: t.imageDefaultAlt }).run();
   };
 
   const handleImageInputChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,9 +148,14 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
 
     if (file) {
       try {
-        await insertImageFromFile(editor, file);
+        await insertImageFromFile(editor, file, {
+          invalidType: t.imageInvalidType,
+          tooLarge: t.imageTooLarge,
+          readFailed: t.imageReadFailed,
+          convertFailed: t.imageConvertFailed,
+        }, t.imageDefaultAlt);
       } catch (error) {
-        alert(error instanceof Error ? error.message : getImageSizeErrorMessage());
+        alert(error instanceof Error ? error.message : t.imageInsertFailed);
       }
     }
 
@@ -169,7 +176,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
 
       <div className="editor-toolbar__group">
         <select
-          aria-label="Text style"
+          aria-label={t.toolbarTextStyle}
           className="editor-select"
           value={headingValue}
           onChange={(event) => {
@@ -184,33 +191,33 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
             chain.toggleHeading({ level: Number(nextValue.slice(1)) as 1 | 2 | 3 }).run();
           }}
         >
-          <option value="paragraph">Paragraph</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
+          <option value="paragraph">{t.toolbarParagraph}</option>
+          <option value="h1">{t.toolbarHeading1}</option>
+          <option value="h2">{t.toolbarHeading2}</option>
+          <option value="h3">{t.toolbarHeading3}</option>
         </select>
         <ToolbarButton
           active={editorState.isParagraph}
           icon={<Pilcrow size={16} />}
-          label="Paragraph"
+          label={t.toolbarParagraph}
           onClick={() => editor.chain().focus().setParagraph().run()}
         />
         <ToolbarButton
           active={editorState.isHeading1}
           icon={<Heading1 size={16} />}
-          label="Heading 1"
+          label={t.toolbarHeading1}
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         />
         <ToolbarButton
           active={editorState.isHeading2}
           icon={<Heading2 size={16} />}
-          label="Heading 2"
+          label={t.toolbarHeading2}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         />
         <ToolbarButton
           active={editorState.isHeading3}
           icon={<Heading3 size={16} />}
-          label="Heading 3"
+          label={t.toolbarHeading3}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         />
       </div>
@@ -220,32 +227,32 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           active={editorState.isBold}
           disabled={!editorState.canToggleBold}
           icon={<Bold size={16} />}
-          label="Bold"
+          label={t.toolbarBold}
           onClick={() => editor.chain().focus().toggleBold().run()}
         />
         <ToolbarButton
           active={editorState.isItalic}
           icon={<Italic size={16} />}
-          label="Italic"
+          label={t.toolbarItalic}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         />
         <ToolbarButton
           active={editorState.isUnderline}
           icon={<UnderlineIcon size={16} />}
-          label="Underline"
+          label={t.toolbarUnderline}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         />
         <ToolbarButton
           active={editorState.isStrike}
           icon={<Strikethrough size={16} />}
-          label="Strike"
+          label={t.toolbarStrike}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         />
         <ToolbarButton
           active={editorState.isCode}
           disabled={!editorState.canToggleCode}
           icon={<Code size={16} />}
-          label="Inline code"
+          label={t.toolbarInlineCode}
           onClick={() => editor.chain().focus().toggleCode().run()}
         />
       </div>
@@ -255,40 +262,40 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           active={editorState.isBulletList}
           disabled={!editorState.canToggleBulletList}
           icon={<List size={16} />}
-          label="Bullet list"
+          label={t.toolbarBulletList}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         />
         <ToolbarButton
           active={editorState.isOrderedList}
           disabled={!editorState.canToggleOrderedList}
           icon={<ListOrdered size={16} />}
-          label="Ordered list"
+          label={t.toolbarOrderedList}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         />
         <ToolbarButton
           active={editorState.isTaskList}
           disabled={!editorState.canToggleTaskList}
           icon={<CheckSquare size={16} />}
-          label="Task list"
+          label={t.toolbarTaskList}
           onClick={() => editor.chain().focus().toggleTaskList().run()}
         />
         <ToolbarButton
           active={editorState.isBlockquote}
           disabled={!editorState.canToggleBlockquote}
           icon={<Quote size={16} />}
-          label="Blockquote"
+          label={t.toolbarBlockquote}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         />
         <ToolbarButton
           active={editorState.isCodeBlock}
           disabled={!editorState.canToggleCodeBlock}
           icon={<Code2 size={16} />}
-          label="Code block"
+          label={t.toolbarCodeBlock}
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         />
         <ToolbarButton
           icon={<Minus size={16} />}
-          label="Horizontal rule"
+          label={t.toolbarHorizontalRule}
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
         />
       </div>
@@ -297,25 +304,25 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
         <ToolbarButton
           active={editorState.isAlignLeft}
           icon={<AlignLeft size={16} />}
-          label="Align left"
+          label={t.toolbarAlignLeft}
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
         />
         <ToolbarButton
           active={editorState.isAlignCenter}
           icon={<AlignCenter size={16} />}
-          label="Align center"
+          label={t.toolbarAlignCenter}
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
         />
         <ToolbarButton
           active={editorState.isAlignRight}
           icon={<AlignRight size={16} />}
-          label="Align right"
+          label={t.toolbarAlignRight}
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
         />
         <ToolbarButton
           active={editorState.isAlignJustify}
           icon={<AlignJustify size={16} />}
-          label="Justify"
+          label={t.toolbarJustify}
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
         />
       </div>
@@ -325,12 +332,12 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           active={editorState.isLink}
           disabled={!editorState.canSetLink}
           icon={<Link2 size={16} />}
-          label="Set link"
+          label={t.toolbarSetLink}
           onClick={handleSetLink}
         />
         <ToolbarButton
           icon={<Unlink size={16} />}
-          label="Remove link"
+          label={t.toolbarRemoveLink}
           onClick={() => editor.chain().focus().unsetLink().run()}
         />
       </div>
@@ -339,12 +346,12 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
         <ToolbarButton
           active={editorState.hasImage}
           icon={<ImageIcon size={16} />}
-          label="Upload image"
+          label={t.toolbarUploadImage}
           onClick={() => imageInputRef.current?.click()}
         />
         <ToolbarButton
           icon={<Link2 size={16} />}
-          label="Insert image from URL"
+          label={t.toolbarInsertImageUrl}
           onClick={handleInsertImageUrl}
         />
       </div>
@@ -354,39 +361,39 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           active={editorState.hasTable}
           disabled={!editorState.canInsertTable}
           icon={<Table2 size={16} />}
-          label="Insert table"
+          label={t.toolbarInsertTable}
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
         />
         <ToolbarButton
           disabled={!editorState.hasTable}
           icon={<Rows3 size={16} />}
-          label="Add row"
+          label={t.toolbarAddRow}
           onClick={() => editor.chain().focus().addRowAfter().run()}
         />
         <ToolbarButton
           disabled={!editorState.hasTable}
           icon={<Columns3 size={16} />}
-          label="Add column"
+          label={t.toolbarAddColumn}
           onClick={() => editor.chain().focus().addColumnAfter().run()}
         />
         <ToolbarButton
           disabled={!editorState.hasTable}
           icon={<Trash2 size={16} />}
-          label="Delete table"
+          label={t.toolbarDeleteTable}
           onClick={() => editor.chain().focus().deleteTable().run()}
         />
       </div>
 
       <div className="editor-toolbar__group">
-        <span className="editor-toolbar__label">Text</span>
+        <span className="editor-toolbar__label">{t.toolbarText}</span>
         <div className="editor-swatches">
           {textColors.map((color) => (
             <button
               key={color}
               type="button"
               className="editor-swatch"
-              aria-label={`Text color ${color}`}
-              title={`Text color ${color}`}
+              aria-label={`${t.toolbarTextColorLabel} ${color}`}
+              title={`${t.toolbarTextColorLabel} ${color}`}
               style={{ backgroundColor: color }}
               onClick={() => editor.chain().focus().setColor(color).run()}
             />
@@ -394,21 +401,21 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
         </div>
         <ToolbarButton
           icon={<SquareSlash size={16} />}
-          label="Clear text color"
+          label={t.toolbarClearTextColor}
           onClick={() => editor.chain().focus().unsetColor().run()}
         />
       </div>
 
       <div className="editor-toolbar__group">
-        <span className="editor-toolbar__label">Highlight</span>
+        <span className="editor-toolbar__label">{t.toolbarHighlight}</span>
         <div className="editor-swatches">
           {highlightColors.map((color) => (
             <button
               key={color}
               type="button"
               className="editor-swatch editor-swatch--highlight"
-              aria-label={`Highlight color ${color}`}
-              title={`Highlight color ${color}`}
+              aria-label={`${t.toolbarHighlightColorLabel} ${color}`}
+              title={`${t.toolbarHighlightColorLabel} ${color}`}
               style={{ backgroundColor: color }}
               onClick={() => editor.chain().focus().toggleHighlight({ color }).run()}
             />
@@ -416,7 +423,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
         </div>
         <ToolbarButton
           icon={<Highlighter size={16} />}
-          label="Clear highlight"
+          label={t.toolbarClearHighlight}
           onClick={() => editor.chain().focus().unsetHighlight().run()}
         />
       </div>
@@ -424,7 +431,7 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       <div className="editor-toolbar__group">
         <ToolbarButton
           icon={<Eraser size={16} />}
-          label="Clear formatting"
+          label={t.toolbarClearFormatting}
           onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
         />
       </div>

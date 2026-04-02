@@ -2,12 +2,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { motion } from 'framer-motion';
 import { Workspace } from './components/Editor/Workspace';
+import { LanguageSelect } from './components/Layout/LanguageSelect';
 import { TopBar } from './components/Layout/TopBar';
+import { I18nProvider, useI18n } from './i18n';
 import { FileProcessingService } from './services/fileProcessing';
 import { CollaborationService, type ConnectedUser } from './services/collaboration';
 import './index.css';
 
-function App() {
+function AppContent() {
+  const { t } = useI18n();
   const [userName, setUserName] = useState('');
   const [roomInput, setRoomInput] = useState('');
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
@@ -41,6 +44,13 @@ function App() {
     };
   }, [collaboration]);
 
+  const handleLeaveDocument = () => {
+    editorRef.current = null;
+    setConnectedUsers([]);
+    setCollaboration(null);
+    setActiveRoom(null);
+  };
+
   const handleJoinRoom = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -61,7 +71,7 @@ function App() {
       setCollaboration(nextCollaboration);
     } catch (error) {
       nextCollaboration.disconnect();
-      alert('No se pudo conectar a PeerJS Cloud para abrir la sala.');
+      alert(t.connectRoomError);
       console.error(error);
     } finally {
       setIsJoining(false);
@@ -78,7 +88,7 @@ function App() {
       try {
         await FileProcessingService.importDocx(file, editorRef.current);
       } catch (error) {
-        alert('Error importando el archivo.');
+        alert(t.importFileError);
         console.error(error);
       }
     }
@@ -97,7 +107,7 @@ function App() {
       const html = editorRef.current.getHTML();
       await FileProcessingService.exportDocx(html, `${activeRoom}.docx`);
     } catch (error) {
-      alert('Error exportando el archivo.');
+      alert(t.exportWordError);
       console.error(error);
     }
   };
@@ -121,7 +131,7 @@ function App() {
         await FileProcessingService.exportPdf(element, `${activeRoom}.pdf`);
       }
     } catch (error) {
-      alert('Error exportando el archivo.');
+      alert(t.exportPdfError);
       console.error(error);
     }
   };
@@ -141,26 +151,30 @@ function App() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="glass-panel"
-          style={{ padding: '40px', width: '100%', maxWidth: '400px' }}
+          style={{ padding: '40px', width: '100%', maxWidth: '420px' }}
         >
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+            <LanguageSelect />
+          </div>
+
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h1 style={{ color: 'var(--primary-dark)', fontSize: '2rem', marginBottom: '8px' }}>
               PeerScribe
             </h1>
             <p style={{ color: 'var(--text-secondary)' }}>
-              Editor colaborativo local-first
+              {t.appTagline}
             </p>
           </div>
 
           <form onSubmit={(event) => void handleJoinRoom(event)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                Tu nombre
+                {t.joinNameLabel}
               </label>
               <input
                 type="text"
                 required
-                placeholder="Ej. Ana Garcia"
+                placeholder={t.joinNamePlaceholder}
                 value={userName}
                 onChange={(event) => setUserName(event.target.value)}
                 style={{
@@ -177,12 +191,12 @@ function App() {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                ID de la clase o sala
+                {t.joinRoomLabel}
               </label>
               <input
                 type="text"
                 required
-                placeholder="Ej. historia-aula2"
+                placeholder={t.joinRoomPlaceholder}
                 value={roomInput}
                 onChange={(event) => setRoomInput(event.target.value)}
                 style={{
@@ -215,7 +229,7 @@ function App() {
                 opacity: isJoining ? 0.72 : 1,
               }}
             >
-              {isJoining ? 'Conectando...' : 'Unirse al pizarron'}
+              {isJoining ? t.joiningButton : t.joinButton}
             </motion.button>
           </form>
         </motion.div>
@@ -231,6 +245,7 @@ function App() {
         onImportClick={handleImportDocx}
         onExportWord={handleExportWord}
         onExportPdf={handleExportPdf}
+        onLeaveDocument={handleLeaveDocument}
         fileInputRef={fileInputRef}
         onFileChange={handleFileChange}
       />
@@ -255,6 +270,14 @@ function App() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   );
 }
 

@@ -2,15 +2,19 @@ import type { Editor } from '@tiptap/react';
 
 export const MAX_EMBEDDED_IMAGE_SIZE_BYTES = 500 * 1024;
 
-export const getImageSizeErrorMessage = () =>
-  'Images above 500KB are blocked to keep the P2P session responsive.';
+interface ImageUploadMessages {
+  invalidType: string;
+  tooLarge: string;
+  readFailed: string;
+  convertFailed: string;
+}
 
 export const isAcceptedImageFile = (file: File) => file.type.startsWith('image/');
 
 export const canEmbedImageFile = (file: File) =>
   isAcceptedImageFile(file) && file.size <= MAX_EMBEDDED_IMAGE_SIZE_BYTES;
 
-const readFileAsDataUrl = (file: File) =>
+const readFileAsDataUrl = (file: File, messages: ImageUploadMessages) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
 
@@ -20,29 +24,34 @@ const readFileAsDataUrl = (file: File) =>
         return;
       }
 
-      reject(new Error('Failed to convert the image to a data URL.'));
+      reject(new Error(messages.convertFailed));
     };
 
     reader.onerror = () => {
-      reject(new Error('Failed to read the image file.'));
+      reject(new Error(messages.readFailed));
     };
 
     reader.readAsDataURL(file);
   });
 
-export const insertImageFromFile = async (editor: Editor, file: File) => {
+export const insertImageFromFile = async (
+  editor: Editor,
+  file: File,
+  messages: ImageUploadMessages,
+  altText?: string
+) => {
   if (!isAcceptedImageFile(file)) {
-    throw new Error('Only image files are supported.');
+    throw new Error(messages.invalidType);
   }
 
   if (!canEmbedImageFile(file)) {
-    throw new Error(getImageSizeErrorMessage());
+    throw new Error(messages.tooLarge);
   }
 
-  const imageSource = await readFileAsDataUrl(file);
+  const imageSource = await readFileAsDataUrl(file, messages);
   editor.chain().focus().setImage({
     src: imageSource,
-    alt: file.name,
+    alt: altText ?? file.name,
     title: file.name,
   }).run();
 };

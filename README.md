@@ -2,6 +2,8 @@
 
 PeerScribe is a static, local-first collaborative editor for classrooms and workshops. It runs as a client-side React application, keeps the document in Yjs, persists locally with IndexedDB, and uses PeerJS Cloud as the rendezvous layer for browser-to-browser collaboration.
 
+The interface is localized in Spanish, Galician, English, French, Portuguese, German, Catalan, and Basque, with client-side language selection persisted in the browser.
+
 ## Stack
 
 - React 19 + Vite + TypeScript
@@ -79,6 +81,7 @@ If `VITE_PEER_HOST` is not set, PeerJS defaults are used automatically.
 - Collaborative tables with insert, row, column, and delete controls
 - Embedded images with resize handles and client-side storage
 - Remote cursor labels and tinted collaborative selections for active collaborators
+- A leave-document action that returns the user to the room join screen without reloading the app
 
 ## Project Docs
 

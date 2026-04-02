@@ -10,8 +10,14 @@ PeerScribe is a static React application. The browser owns editor state, persist
   - Handles the room join flow.
   - Creates and disposes the collaboration session.
   - Owns file import and export actions.
+  - Stores the selected UI language and exposes the leave-document flow.
+- `src/i18n.tsx`
+  - Defines the supported locales and translated strings.
+  - Persists the selected locale in the browser.
 - `src/components/Layout/TopBar.tsx`
-  - Displays the room ID, participant count, and export/import actions.
+  - Displays the room ID, participant count, language selector, leave action, and export/import actions.
+- `src/components/Layout/LanguageSelect.tsx`
+  - Reuses the locale picker in the join screen and the room toolbar.
 - `src/components/Editor/Workspace.tsx`
   - Mounts Tiptap.
   - Connects the editor to Yjs document fragments and awareness.
@@ -64,6 +70,13 @@ PeerScribe is a static React application. The browser owns editor state, persist
 - Presence is derived from awareness states and keyed by stable Yjs client IDs.
 - Remote awareness states are removed when peer connections close so the participant list stays accurate.
 - The editor renders remote cursor markers, name chips, and tinted text selections so active collaborators are visible inside the document surface.
+
+## Localization
+
+- Localization is fully client-side.
+- The active locale is stored in `localStorage`.
+- The UI currently ships with Spanish, Galician, English, French, Portuguese, German, Catalan, and Basque translations.
+- Tooltips, prompts, alerts, join-screen copy, room actions, and editor placeholder text all resolve through the same translation layer.
 
 ## File Processing Flow
 

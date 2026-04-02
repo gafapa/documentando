@@ -18,12 +18,9 @@ import TaskList from '@tiptap/extension-task-list';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import * as Y from 'yjs';
+import { useI18n } from '../../i18n';
 import type { CollaborationProvider } from '../../services/collaboration';
-import {
-  canEmbedImageFile,
-  getImageSizeErrorMessage,
-  insertImageFromFile
-} from './imageUpload';
+import { canEmbedImageFile, insertImageFromFile } from './imageUpload';
 import { TiptapToolbar } from './TiptapToolbar';
 
 interface WorkspaceProps {
@@ -36,23 +33,9 @@ interface WorkspaceProps {
   onEditorReady: (editor: Editor | null) => void;
 }
 
-const buildCaretElement = (caretUser: { color?: string; name?: string }) => {
-  const cursor = document.createElement('span');
-  const label = document.createElement('span');
-  const marker = document.createElement('span');
-
-  cursor.classList.add('collaboration-cursor');
-  cursor.style.setProperty('--collaboration-user-color', caretUser.color ?? 'var(--primary-dark)');
-
-  marker.classList.add('collaboration-cursor__marker');
-  label.classList.add('collaboration-cursor__label');
-  label.textContent = caretUser.name || 'Guest';
-
-  cursor.append(marker, label);
-  return cursor;
-};
-
 export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEditorReady }) => {
+  const { t } = useI18n();
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -66,16 +49,30 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
       CollaborationCaret.configure({
         provider,
         user,
-        render: buildCaretElement,
+        render: (caretUser) => {
+          const cursor = document.createElement('span');
+          const label = document.createElement('span');
+          const marker = document.createElement('span');
+
+          cursor.classList.add('collaboration-cursor');
+          cursor.style.setProperty('--collaboration-user-color', caretUser.color ?? 'var(--primary-dark)');
+
+          marker.classList.add('collaboration-cursor__marker');
+          label.classList.add('collaboration-cursor__label');
+          label.textContent = caretUser.name || t.guestUser;
+
+          cursor.append(marker, label);
+          return cursor;
+        },
         selectionRender: (selectionUser) => ({
           nodeName: 'span',
           class: 'collaboration-selection',
           style: `--collaboration-user-color: ${selectionUser.color ?? 'var(--primary-dark)'}`,
-          'data-user-name': selectionUser.name ?? 'Guest',
+          'data-user-name': selectionUser.name ?? t.guestUser,
         }),
       }),
       Placeholder.configure({
-        placeholder: 'Start writing your collaborative document...',
+        placeholder: t.editorPlaceholder,
       }),
       Link.configure({
         openOnClick: false,
@@ -135,7 +132,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
           event.preventDefault();
 
           if (!canEmbedImageFile(file)) {
-            alert(getImageSizeErrorMessage());
+            alert(t.imageTooLarge);
             return true;
           }
 
@@ -143,8 +140,13 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
             return true;
           }
 
-          void insertImageFromFile(editor, file).catch((error) => {
-            alert(error instanceof Error ? error.message : 'Failed to paste the image.');
+          void insertImageFromFile(editor, file, {
+            invalidType: t.imageInvalidType,
+            tooLarge: t.imageTooLarge,
+            readFailed: t.imageReadFailed,
+            convertFailed: t.imageConvertFailed,
+          }, t.imageDefaultAlt).catch((error) => {
+            alert(error instanceof Error ? error.message : t.imagePasteFailed);
           });
 
           return true;
@@ -163,7 +165,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
         event.preventDefault();
 
         if (!canEmbedImageFile(imageFile)) {
-          alert(getImageSizeErrorMessage());
+          alert(t.imageTooLarge);
           return true;
         }
 
@@ -171,14 +173,19 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
           return true;
         }
 
-        void insertImageFromFile(editor, imageFile).catch((error) => {
-          alert(error instanceof Error ? error.message : 'Failed to insert the image.');
+        void insertImageFromFile(editor, imageFile, {
+          invalidType: t.imageInvalidType,
+          tooLarge: t.imageTooLarge,
+          readFailed: t.imageReadFailed,
+          convertFailed: t.imageConvertFailed,
+        }, t.imageDefaultAlt).catch((error) => {
+          alert(error instanceof Error ? error.message : t.imageInsertFailed);
         });
 
         return true;
       },
     },
-  }, [provider, user.color, user.name, yDoc]);
+  }, [provider, t.editorPlaceholder, t.guestUser, t.imageConvertFailed, t.imageDefaultAlt, t.imageInsertFailed, t.imageInvalidType, t.imagePasteFailed, t.imageReadFailed, t.imageTooLarge, user.color, user.name, yDoc]);
 
   useEffect(() => {
     onEditorReady(editor);

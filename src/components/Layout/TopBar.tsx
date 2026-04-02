@@ -1,7 +1,9 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Download, FileDown, FileUp, Users } from 'lucide-react';
+import { Download, FileDown, FileUp, LogOut, Users } from 'lucide-react';
+import { useI18n } from '../../i18n';
 import type { ConnectedUser } from '../../services/collaboration';
+import { LanguageSelect } from './LanguageSelect';
 
 interface TopBarProps {
   roomName: string;
@@ -9,6 +11,7 @@ interface TopBarProps {
   onImportClick: () => void;
   onExportWord: () => void;
   onExportPdf: () => void;
+  onLeaveDocument: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -19,26 +22,19 @@ export const TopBar: React.FC<TopBarProps> = ({
   onImportClick,
   onExportWord,
   onExportPdf,
+  onLeaveDocument,
   fileInputRef,
   onFileChange
 }) => {
+  const { t } = useI18n();
+
   return (
     <motion.div
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="glass-panel"
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 24px',
-        margin: '16px',
-        position: 'sticky',
-        top: '16px',
-        zIndex: 100
-      }}
+      className="glass-panel topbar"
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="topbar__meta">
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--primary-dark)' }}>
           {roomName}
         </h2>
@@ -46,7 +42,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(59,130,246,0.1)', padding: '6px 12px', borderRadius: '20px' }}>
           <Users size={16} color="var(--primary)" />
           <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--primary)' }}>
-            {connectedUsers.length} {connectedUsers.length === 1 ? 'estudiante' : 'estudiantes'} en linea
+            {t.onlineUsers(connectedUsers.length)}
           </span>
         </div>
 
@@ -82,7 +78,9 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px' }}>
+      <div className="topbar__actions">
+        <LanguageSelect inline showLabel={false} />
+
         <input
           type="file"
           accept=".docx"
@@ -94,42 +92,36 @@ export const TopBar: React.FC<TopBarProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onImportClick}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 16px', borderRadius: '8px',
-            background: 'white', border: '1px solid var(--border-color)',
-            color: 'var(--text-secondary)', fontWeight: 500
-          }}
+          className="topbar__button topbar__button--secondary"
         >
-          <FileUp size={16} /> Importar DOCX
+          <FileUp size={16} /> {t.importDocx}
         </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onExportWord}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 16px', borderRadius: '8px',
-            background: 'white', border: '1px solid var(--border-color)',
-            color: 'var(--text-secondary)', fontWeight: 500
-          }}
+          className="topbar__button topbar__button--secondary"
         >
-          <FileDown size={16} /> Exportar Word
+          <FileDown size={16} /> {t.exportWord}
         </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onExportPdf}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 16px', borderRadius: '8px',
-            background: 'var(--primary)', border: 'none',
-            color: 'white', fontWeight: 500
-          }}
+          className="topbar__button topbar__button--primary"
         >
-          <Download size={16} /> Guardar PDF
+          <Download size={16} /> {t.savePdf}
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onLeaveDocument}
+          className="topbar__button topbar__button--secondary"
+        >
+          <LogOut size={16} /> {t.leaveDocument}
         </motion.button>
       </div>
     </motion.div>
