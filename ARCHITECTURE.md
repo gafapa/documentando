@@ -1,0 +1,66 @@
+# Architecture
+
+## Overview
+
+PeerScribe is a client-heavy React application. The browser owns the editor state, persistence, and peer communication. The only required network-side service for multi-device collaboration is a WebRTC signaling server, which can run on the same LAN as the app host.
+
+## Runtime Pieces
+
+- `src/App.tsx`
+  - Handles room join flow.
+  - Creates and disposes the collaboration session.
+  - Owns file import/export actions.
+- `src/components/Layout/TopBar.tsx`
+  - Displays room identity, connected users, and file actions.
+- `src/components/Editor/Workspace.tsx`
+  - Mounts Quill.
+  - Binds the editor to Yjs through `y-quill`.
+  - Enforces the clipboard image size guard.
+- `src/services/collaboration.ts`
+  - Creates the Yjs document.
+  - Connects `y-webrtc` with LAN-oriented signaling defaults.
+  - Enables IndexedDB persistence.
+  - Exposes awareness-derived presence data.
+- `src/services/fileProcessing.ts`
+  - Imports DOCX through Mammoth.
+  - Exports DOCX and PDF through locally served client-side libraries loaded on demand.
+
+## Collaboration Flow
+
+1. A user enters a name and room identifier.
+2. `App.tsx` creates a `CollaborationService` instance and stores it in React state.
+3. `CollaborationService` opens:
+   - a `Y.Doc` for shared text
+   - a `WebrtcProvider` for peer transport
+   - an `IndexeddbPersistence` store for offline recovery
+4. `Workspace.tsx` binds the room text (`quill-editor`) to Quill via `QuillBinding`.
+5. Awareness state is observed and mapped to stable client IDs for the participant list.
+
+## Signaling Strategy
+
+- Default signaling URL: `ws://<current-hostname>:4444`
+- Override mechanism: `VITE_SIGNALING_URLS`
+- Local signaling process: `npm run signaling`
+
+This keeps the default setup local-network friendly instead of depending on public signaling endpoints.
+
+## File Processing Flow
+
+- DOCX import:
+  - Read the file with `FileReader`
+  - Convert DOCX to HTML with Mammoth
+  - Replace Quill content through Quill APIs
+- DOCX export:
+  - Serialize editor HTML
+  - Load `html-docx-js` on demand
+  - Generate and download the blob locally
+- PDF export:
+  - Capture the editor DOM subtree
+  - Load `html2pdf.js` on demand
+  - Generate and save the PDF locally
+
+## Deployment Notes
+
+- The app can be served as static files.
+- Multi-device collaboration requires a reachable signaling server on the LAN.
+- Same-browser tab collaboration can still work through broadcast channels even without the signaling server.

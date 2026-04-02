@@ -1,63 +1,58 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Quill from 'quill';
+import { motion } from 'framer-motion';
 import { TopBar } from './components/Layout/TopBar';
 import { Workspace } from './components/Editor/Workspace';
 import { CollaborationService } from './services/collaboration';
+import type { ConnectedUser } from './services/collaboration';
 import { FileProcessingService } from './services/fileProcessing';
-import { motion } from 'framer-motion';
-import Quill from 'quill';
 import './index.css';
 
 function App() {
   const [userName, setUserName] = useState('');
   const [roomInput, setRoomInput] = useState('');
-  
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
-  const [activeUser, setActiveUser] = useState<string>('');
-  
-  const [connectedUsers, setConnectedUsers] = useState<{name: string, color: string}[]>([]);
-  
-  const collabService = useRef<CollaborationService | null>(null);
+  const [collaboration, setCollaboration] = useState<CollaborationService | null>(null);
+  const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
+
   const quillRef = useRef<Quill | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const onEditorReady = useCallback((quill: Quill) => {
+    quillRef.current = quill;
+  }, []);
 
   useEffect(() => {
-    if (activeRoom && activeUser) {
-      // Iniciar la conexión cuando hay un Room activo
-      collabService.current = new CollaborationService(activeRoom, activeUser);
-      collabService.current.connect();
-
-      // Escuchar cambios en awareness para actualizar la TopBar
-      collabService.current.awareness.on('change', () => {
-        const states = Array.from(collabService.current?.awareness.getStates().values() || []) as any[];
-        const users = states
-          .filter(state => state.user)
-          .map(state => state.user);
-        
-        // Remove duplicates just in case
-        const uniqueUsers = Array.from(new Set(users.map(u => u.name)))
-          .map(name => {
-            return users.find(u => u.name === name)!;
-          });
-          
-        setConnectedUsers(uniqueUsers);
-      });
-
-      return () => {
-        collabService.current?.disconnect();
-      };
+    if (!collaboration?.awareness) {
+      return;
     }
-  }, [activeRoom, activeUser]);
+
+    const awareness = collaboration.awareness;
+
+    const syncConnectedUsers = () => {
+      setConnectedUsers(collaboration.getConnectedUsers());
+    };
+
+    awareness.on('change', syncConnectedUsers);
+
+    return () => {
+      awareness.off('change', syncConnectedUsers);
+      collaboration.disconnect();
+    };
+  }, [collaboration]);
 
   const handleJoinRoom = (e: React.FormEvent) => {
     e.preventDefault();
     if (userName.trim() && roomInput.trim()) {
-      setActiveUser(userName.trim());
-      setActiveRoom(roomInput.trim().toLowerCase().replace(/\s+/g, '-'));
-    }
-  };
+      const nextRoom = roomInput.trim().toLowerCase().replace(/\s+/g, '-');
+      const nextUser = userName.trim();
+      const nextCollaboration = new CollaborationService(nextRoom, nextUser);
 
-  const onEditorReady = (quill: Quill) => {
-    quillRef.current = quill;
+      nextCollaboration.connect();
+
+      setActiveRoom(nextRoom);
+      setConnectedUsers(nextCollaboration.getConnectedUsers());
+      setCollaboration(nextCollaboration);
+    }
   };
 
   const handleImportDocx = () => {
@@ -74,38 +69,49 @@ function App() {
         console.error(err);
       }
     }
-    // clear input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
 
-  const handleExportWord = () => {
-    if (quillRef.current) {
-      const html = quillRef.current.root.innerHTML;
-      FileProcessingService.exportDocx(html, `${activeRoom}.docx`);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  const handleExportPdf = () => {
+  const handleExportWord = async () => {
+    if (quillRef.current && activeRoom) {
+      try {
+        const html = quillRef.current.root.innerHTML;
+        await FileProcessingService.exportDocx(html, `${activeRoom}.docx`);
+      } catch (err) {
+        alert('Error exportando el archivo.');
+        console.error(err);
+      }
+    }
+  };
+
+  const handleExportPdf = async () => {
     const element = document.getElementById('pdf-export-container');
-    if (element) {
-      // Ocultar botones/herramientas antes de PDF (aquí usamos el contenedor interno ql-editor que está limpio)
-        const qlEditor = element.querySelector('.ql-editor') as HTMLElement | null;
-        if (qlEditor) {
-          FileProcessingService.exportPdf(qlEditor, `${activeRoom}.pdf`);
+    if (element && activeRoom) {
+      const editorContent = element.querySelector('.ql-editor') as HTMLElement | null;
+
+      try {
+        if (editorContent) {
+          await FileProcessingService.exportPdf(editorContent, `${activeRoom}.pdf`);
         } else {
-          FileProcessingService.exportPdf(element, `${activeRoom}.pdf`);
+          await FileProcessingService.exportPdf(element, `${activeRoom}.pdf`);
         }
+      } catch (err) {
+        alert('Error exportando el archivo.');
+        console.error(err);
+      }
     }
   };
 
-  // Pantalla de Inicio
   if (!activeRoom) {
     return (
       <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh',
         padding: '24px'
       }}>
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="glass-panel"
@@ -119,8 +125,8 @@ function App() {
           <form onSubmit={handleJoinRoom} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Tu Nombre</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 placeholder="Ej. Ana García"
                 value={userName}
@@ -135,8 +141,8 @@ function App() {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>ID de la Clase/Sala</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 placeholder="Ej. historia-aula2"
                 value={roomInput}
@@ -149,7 +155,7 @@ function App() {
               />
             </div>
 
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
@@ -168,10 +174,9 @@ function App() {
     );
   }
 
-  // Pantalla del Editor
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <TopBar 
+      <TopBar
         roomName={activeRoom}
         connectedUsers={connectedUsers}
         onImportClick={handleImportDocx}
@@ -180,17 +185,18 @@ function App() {
         fileInputRef={fileInputRef}
         onFileChange={handleFileChange}
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
         style={{ flex: 1, padding: '0 16px', display: 'flex', justifyContent: 'center' }}
       >
-        {collabService.current && (
-          <Workspace 
-            yDoc={collabService.current.doc}
-            awareness={collabService.current.awareness}
+        {collaboration && collaboration.awareness && (
+          <Workspace
+            key={collaboration.roomName}
+            yDoc={collaboration.doc}
+            awareness={collaboration.awareness}
             onEditorReady={onEditorReady}
           />
         )}

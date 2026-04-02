@@ -5,12 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:host": "vite preview --host 0.0.0.0",
+    "signaling": "node ./node_modules/y-webrtc/bin/server.js"
   },
   "dependencies": {
     "framer-motion": "^12.38.0",
+    "html-docx-js": "^0.3.1",
+    "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.7.0",
     "mammoth": "^1.12.0",
     "quill": "^2.0.3",

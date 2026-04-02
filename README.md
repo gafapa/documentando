@@ -1,54 +1,74 @@
-# PeerScribe - Editor Colaborativo Local-First
+# PeerScribe
 
-PeerScribe es un editor colaborativo en tiempo real diseñado para operar en entornos educativos que disponen de conexión local (LAN/Wi-Fi) pero que no requieren o carecen de conexión estable a bases de datos o servidores en la nube centralizados. 
+PeerScribe is a local-first collaborative editor built for classroom and workshop environments that operate on a LAN without relying on cloud databases. The application uses Yjs CRDTs, WebRTC peer networking, and IndexedDB persistence so each participant can keep working from the browser even when the internet is unavailable.
 
-Utiliza tecnología **Peer-to-Peer (P2P)** auténtica combinada con las matemáticas de **CRDTs (Yjs)** para lograr descentralización total y sincronización instantánea de los documentos.
+## Stack
 
-## Arquitectura y Stack Tecnológico
-* **Framework y UI:** [React](https://react.dev) + [Vite](https://vitejs.dev) + [TypeScript](https://www.typescriptlang.org/)
-* **Animaciones y Estilo:** Framer Motion + Glassmorphism Premium en CSS plano.
-* **Core Colaborativo:** [Yjs](https://yjs.dev/)
-* **Editor de Texto:** [Quill 2](https://quilljs.com)
-* **Red (Malla P2P):** `y-webrtc` (Canales WebRTC sobre servidores locales o públicos).
-* **Persistencia Integrada:** `y-indexeddb` (El documento se mantiene guardado offline localmente dentro del navegador de cada ordenador para evitar pérdida accidental de datos).
-* **Manejo de Formularios Externos:** 
-   - `mammoth` (Importación desde `.docx`)
-   - `html-docx-js` (Exportación a `.docx`)
-   - `html2pdf.js` (Exportación a PDF)
+- React 19 + Vite + TypeScript
+- Quill 2 for rich-text editing
+- Yjs, `y-webrtc`, and `y-indexeddb` for synchronization and local persistence
+- Mammoth for DOCX import
+- `html-docx-js` and `html2pdf.js` for local export
+- Framer Motion and custom CSS for the interface
 
-## ¿Cómo Funciona el P2P Local-First?
-El sistema no utiliza bases de datos corporativas. En su lugar, el flujo es el siguiente:
-1. El estudiante teclea y genera un "Update" mediante el motor Yjs en formato binario (`Uint8Array`).
-2. La topología de malla (`y-webrtc`) transmite automáticamente esta actualización al resto de estudiantes que están conectados a la misma **"ID de Sala"**.
-3. El CRDT integrado procesa los cambios concurrentes de manera matemática libre de conflictos.
-4. Tu navegador funciona siempre de *respaldo* frente al cierre de la aplicación con la base de datos temporal en `IndexedDB`.
+## How Collaboration Works
 
-## Requisitos Previos
-* Node.js v18+ 
-* Gestor de paquetes: NPM, Yarn o Pnpm.
+1. Each room maps to a Yjs document namespace.
+2. The browser stores document updates in IndexedDB for offline recovery.
+3. Peers exchange updates through `y-webrtc`.
+4. Presence information is shared through Yjs awareness and rendered in the top bar.
 
-## Ejecución en Modo Desarrollo
+Peer discovery is designed for local deployment. By default, the client looks for a signaling server on the same host at port `4444`. You can override this with `VITE_SIGNALING_URLS` if your signaling endpoint runs elsewhere.
+
+## Local Development
+
+Install dependencies:
 
 ```bash
-# Instala las dependencias del proyecto:
 npm install
-
-# Inicia el empaquetado de desarrollo de Vite:
-npm run dev
 ```
 
-El servidor local se abrirá en `http://localhost:5173`. Para simular una clase, puedes simplemente abrir varias pestañas o ventanas de incógnito dentro del navegador para unirte a la misma "Sala".
-
-## Compilación para Producción (Sitio Estático)
-Dado que es `Local-First`, todo el cerebro de la aplicación reside en el cliente.
-Para exportar tu proyecto a ficheros HTML/CSS/JS puros listos para cualquier *CDN* (como GitHub Pages o un Nginx local), ejecuta:
+Start the WebRTC signaling server in one terminal:
 
 ```bash
-npm run build
+npm run signaling
 ```
 
-El bundle resultante quedará empacado y minificado en la carpeta `/dist`.
+Start the Vite app in another terminal and expose it to the LAN:
 
-## Seguridad y Limitaciones
-* **Bloqueo Inteligente:** Se ha bloqueado y advertido al usuario sobre la subida o inserción de imágenes que excedan de ~500kb vía portapapeles con el fin de evitar "lag" o "saturación" de los canales de datos P2P en el aula.
-* Se recomienda utilizar navegadores modernos actualizados (Chrome, Safari, Firefox o Edge) para dar compatibilidad a _WebRTC_ de forma plena.
+```bash
+npm run dev:host
+```
+
+The editor will be available on the host machine and other devices on the same network. Tabs in the same browser can also synchronize through broadcast channels.
+
+## Environment Variables
+
+Create a local `.env` file if you need custom signaling endpoints:
+
+```bash
+VITE_SIGNALING_PORT=4444
+VITE_SIGNALING_URLS=ws://192.168.1.20:4444
+```
+
+`VITE_SIGNALING_URLS` accepts a comma-separated list. When it is not set, the app derives a single URL from the current hostname and `VITE_SIGNALING_PORT`.
+
+## Available Scripts
+
+- `npm run dev` starts Vite for local development.
+- `npm run dev:host` starts Vite on `0.0.0.0` for LAN access.
+- `npm run signaling` starts the local `y-webrtc` signaling server on port `4444`.
+- `npm run build` creates the production bundle.
+- `npm run preview` serves the production build locally.
+- `npm run lint` runs ESLint.
+
+## Export and Import
+
+- DOCX import goes through Mammoth and is applied through the Quill document model so Yjs stays in sync.
+- DOCX and PDF export are served locally with the app. They no longer depend on runtime CDN scripts.
+
+## Project Docs
+
+- `README.md`: setup and operational overview
+- `ARCHITECTURE.md`: system design and runtime flow
+- `RULES.md`: repository and documentation rules
