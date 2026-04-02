@@ -24,6 +24,8 @@ The interface is localized in Spanish, Galician, English, French, Portuguese, Ge
 
 The application is compatible with static hosting such as Nginx because it does not require custom server code in the app deployment. The collaboration rendezvous step depends on a reachable PeerJS server. By default, the app uses PeerJS Cloud.
 
+The production build is configured to be served from `/documentando/`.
+
 ## Local Development
 
 Install dependencies:

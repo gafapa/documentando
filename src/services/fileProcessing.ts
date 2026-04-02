@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react';
 
 let htmlDocxModulePromise: Promise<HtmlDocxModule> | null = null;
 let html2PdfPromise: Promise<typeof Html2Pdf> | null = null;
+const htmlDocxAssetPath = `${import.meta.env.BASE_URL}vendor/html-docx.js`;
 
 const loadHtml2Pdf = async () => {
   if (!html2PdfPromise) {
@@ -38,7 +39,7 @@ const loadHtmlDocx = async () => {
       }
 
       const script = document.createElement('script');
-      script.src = '/vendor/html-docx.js';
+      script.src = htmlDocxAssetPath;
       script.async = true;
       script.dataset.htmlDocxLoader = 'true';
       script.onload = () => {
