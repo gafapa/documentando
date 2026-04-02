@@ -41,7 +41,9 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
 
 ## Signaling Strategy
 
-- Default signaling order: `ws://<current-hostname>:4444`, then `wss://y-webrtc-eu.fly.dev`
+- Default signaling order:
+  - non-localhost host: `ws://<current-hostname>:4444`, then `wss://y-webrtc-eu.fly.dev`
+  - localhost: `wss://y-webrtc-eu.fly.dev`
 - Override mechanism: `VITE_SIGNALING_URLS`
 - Local signaling process: `npm run signaling`
 

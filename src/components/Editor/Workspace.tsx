@@ -35,6 +35,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEd
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
+        link: false,
         undoRedo: false,
       }),
       Collaboration.configure({

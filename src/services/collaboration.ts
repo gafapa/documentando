@@ -18,6 +18,7 @@ interface AwarenessUserState {
 
 const DEFAULT_SIGNALING_PORT = '4444';
 const DEFAULT_SIGNALING_FALLBACKS = ['wss://y-webrtc-eu.fly.dev'];
+const LOCALHOST_HOSTS = new Set(['127.0.0.1', '::1', 'localhost']);
 
 const generateRandomColor = () => {
   const colors = [
@@ -39,6 +40,14 @@ const getDefaultSignalingUrl = () => {
   return `${protocol}://${host}:${port}`;
 };
 
+const shouldPreferLocalSignaling = () => {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  return !LOCALHOST_HOSTS.has(window.location.hostname || 'localhost');
+};
+
 const getSignalingUrls = () => {
   const configuredUrls = import.meta.env.VITE_SIGNALING_URLS
     ?.split(',')
@@ -49,10 +58,11 @@ const getSignalingUrls = () => {
     return configuredUrls;
   }
 
-  return Array.from(new Set([
-    getDefaultSignalingUrl(),
-    ...DEFAULT_SIGNALING_FALLBACKS,
-  ]));
+  if (!shouldPreferLocalSignaling()) {
+    return DEFAULT_SIGNALING_FALLBACKS;
+  }
+
+  return Array.from(new Set([getDefaultSignalingUrl(), ...DEFAULT_SIGNALING_FALLBACKS]));
 };
 
 export class CollaborationService {
