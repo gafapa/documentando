@@ -67,6 +67,12 @@ VITE_SIGNALING_URLS=ws://192.168.1.20:4444
 - DOCX import goes through Mammoth and is applied through the Tiptap document model so Yjs stays in sync.
 - DOCX and PDF export are served locally with the app. They no longer depend on runtime CDN scripts.
 
+## Editing Features
+
+- Headings, inline formatting, code blocks, quotes, highlights, and text colors
+- Text alignment, links, horizontal rules, ordered lists, bullet lists, and task lists
+- Basic collaborative tables with insert, row, column, and delete controls
+
 ## Project Docs
 
 - `README.md`: setup and operational overview

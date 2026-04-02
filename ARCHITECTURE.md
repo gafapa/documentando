@@ -17,7 +17,7 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
   - Binds the editor to Yjs through the Tiptap collaboration extensions.
   - Enforces the clipboard image size guard.
 - `src/components/Editor/TiptapToolbar.tsx`
-  - Renders formatting controls for headings, marks, lists, highlights, and text colors.
+  - Renders formatting controls for headings, marks, links, alignment, lists, tables, highlights, and text colors.
   - Reflects active editor state through Tiptap React bindings.
 - `src/services/collaboration.ts`
   - Creates the Yjs document.

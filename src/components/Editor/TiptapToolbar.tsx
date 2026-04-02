@@ -2,20 +2,34 @@ import React from 'react';
 import { useEditorState } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Bold,
+  CheckSquare,
+  Code,
   Code2,
+  Columns3,
   Eraser,
   Heading1,
   Heading2,
   Heading3,
   Highlighter,
   Italic,
+  Link2,
   List,
   ListOrdered,
+  Minus,
   Pilcrow,
   Quote,
+  Rows3,
+  SquareSlash,
   Strikethrough,
-  Underline as UnderlineIcon
+  Table2,
+  Trash2,
+  Underline as UnderlineIcon,
+  Unlink
 } from 'lucide-react';
 
 interface TiptapToolbarProps {
@@ -52,23 +66,36 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
   const editorState = useEditorState({
     editor,
     selector: ({ editor: currentEditor }) => ({
+      canInsertTable: currentEditor.can().chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      canSetLink: currentEditor.can().chain().focus().setLink({ href: 'https://example.com' }).run(),
+      canToggleBlockquote: currentEditor.can().chain().focus().toggleBlockquote().run(),
       canToggleBold: currentEditor.can().chain().focus().toggleBold().run(),
       canToggleBulletList: currentEditor.can().chain().focus().toggleBulletList().run(),
-      canToggleOrderedList: currentEditor.can().chain().focus().toggleOrderedList().run(),
-      canToggleBlockquote: currentEditor.can().chain().focus().toggleBlockquote().run(),
+      canToggleCode: currentEditor.can().chain().focus().toggleCode().run(),
       canToggleCodeBlock: currentEditor.can().chain().focus().toggleCodeBlock().run(),
+      canToggleOrderedList: currentEditor.can().chain().focus().toggleOrderedList().run(),
+      canToggleTaskList: currentEditor.can().chain().focus().toggleTaskList().run(),
+      hasTable: currentEditor.isActive('table'),
+      isAlignCenter: currentEditor.isActive({ textAlign: 'center' }),
+      isAlignJustify: currentEditor.isActive({ textAlign: 'justify' }),
+      isAlignLeft: currentEditor.isActive({ textAlign: 'left' }),
+      isAlignRight: currentEditor.isActive({ textAlign: 'right' }),
       isBlockquote: currentEditor.isActive('blockquote'),
       isBold: currentEditor.isActive('bold'),
       isBulletList: currentEditor.isActive('bulletList'),
+      isCode: currentEditor.isActive('code'),
       isCodeBlock: currentEditor.isActive('codeBlock'),
       isHeading1: currentEditor.isActive('heading', { level: 1 }),
       isHeading2: currentEditor.isActive('heading', { level: 2 }),
       isHeading3: currentEditor.isActive('heading', { level: 3 }),
       isItalic: currentEditor.isActive('italic'),
+      isLink: currentEditor.isActive('link'),
       isOrderedList: currentEditor.isActive('orderedList'),
       isParagraph: currentEditor.isActive('paragraph'),
       isStrike: currentEditor.isActive('strike'),
+      isTaskList: currentEditor.isActive('taskList'),
       isUnderline: currentEditor.isActive('underline'),
+      linkHref: currentEditor.getAttributes('link').href as string | undefined,
     }),
   });
 
@@ -79,6 +106,21 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       : editorState.isHeading3
         ? 'h3'
         : 'paragraph';
+
+  const handleSetLink = () => {
+    const nextHref = window.prompt('Enter a URL', editorState.linkHref ?? 'https://');
+    if (nextHref === null) {
+      return;
+    }
+
+    const normalizedHref = nextHref.trim();
+    if (!normalizedHref) {
+      editor.chain().focus().unsetLink().run();
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: normalizedHref }).run();
+  };
 
   return (
     <div className="editor-toolbar glass-panel">
@@ -156,6 +198,13 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           label="Strike"
           onClick={() => editor.chain().focus().toggleStrike().run()}
         />
+        <ToolbarButton
+          active={editorState.isCode}
+          disabled={!editorState.canToggleCode}
+          icon={<Code size={16} />}
+          label="Inline code"
+          onClick={() => editor.chain().focus().toggleCode().run()}
+        />
       </div>
 
       <div className="editor-toolbar__group">
@@ -174,6 +223,13 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         />
         <ToolbarButton
+          active={editorState.isTaskList}
+          disabled={!editorState.canToggleTaskList}
+          icon={<CheckSquare size={16} />}
+          label="Task list"
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+        />
+        <ToolbarButton
           active={editorState.isBlockquote}
           disabled={!editorState.canToggleBlockquote}
           icon={<Quote size={16} />}
@@ -186,6 +242,81 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
           icon={<Code2 size={16} />}
           label="Code block"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        />
+        <ToolbarButton
+          icon={<Minus size={16} />}
+          label="Horizontal rule"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        />
+      </div>
+
+      <div className="editor-toolbar__group">
+        <ToolbarButton
+          active={editorState.isAlignLeft}
+          icon={<AlignLeft size={16} />}
+          label="Align left"
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        />
+        <ToolbarButton
+          active={editorState.isAlignCenter}
+          icon={<AlignCenter size={16} />}
+          label="Align center"
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        />
+        <ToolbarButton
+          active={editorState.isAlignRight}
+          icon={<AlignRight size={16} />}
+          label="Align right"
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        />
+        <ToolbarButton
+          active={editorState.isAlignJustify}
+          icon={<AlignJustify size={16} />}
+          label="Justify"
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+        />
+      </div>
+
+      <div className="editor-toolbar__group">
+        <ToolbarButton
+          active={editorState.isLink}
+          disabled={!editorState.canSetLink}
+          icon={<Link2 size={16} />}
+          label="Set link"
+          onClick={handleSetLink}
+        />
+        <ToolbarButton
+          icon={<Unlink size={16} />}
+          label="Remove link"
+          onClick={() => editor.chain().focus().unsetLink().run()}
+        />
+      </div>
+
+      <div className="editor-toolbar__group">
+        <ToolbarButton
+          active={editorState.hasTable}
+          disabled={!editorState.canInsertTable}
+          icon={<Table2 size={16} />}
+          label="Insert table"
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        />
+        <ToolbarButton
+          disabled={!editorState.hasTable}
+          icon={<Rows3 size={16} />}
+          label="Add row"
+          onClick={() => editor.chain().focus().addRowAfter().run()}
+        />
+        <ToolbarButton
+          disabled={!editorState.hasTable}
+          icon={<Columns3 size={16} />}
+          label="Add column"
+          onClick={() => editor.chain().focus().addColumnAfter().run()}
+        />
+        <ToolbarButton
+          disabled={!editorState.hasTable}
+          icon={<Trash2 size={16} />}
+          label="Delete table"
+          onClick={() => editor.chain().focus().deleteTable().run()}
         />
       </div>
 
@@ -204,6 +335,11 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
             />
           ))}
         </div>
+        <ToolbarButton
+          icon={<SquareSlash size={16} />}
+          label="Clear text color"
+          onClick={() => editor.chain().focus().unsetColor().run()}
+        />
       </div>
 
       <div className="editor-toolbar__group">
