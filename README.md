@@ -18,7 +18,7 @@ PeerScribe is a local-first collaborative editor built for classroom and worksho
 3. Peers exchange updates through `y-webrtc`.
 4. Presence information is shared through Yjs awareness and rendered in the top bar.
 
-Peer discovery is designed for local deployment. By default, the client looks for a signaling server on the same host at port `4444`. You can override this with `VITE_SIGNALING_URLS` if your signaling endpoint runs elsewhere.
+Peer discovery is designed for local deployment. By default, the client first tries a signaling server on the same host at port `4444`, then falls back to the official `y-webrtc` relay if it is reachable. You can override this with `VITE_SIGNALING_URLS` if your signaling endpoint runs elsewhere.
 
 ## Local Development
 
@@ -42,6 +42,8 @@ npm run dev:host
 
 The editor will be available on the host machine and other devices on the same network. Tabs in the same browser can also synchronize through broadcast channels.
 
+If you do not run `npm run signaling`, collaboration can still work through the fallback relay when internet access is available. For LAN-only or offline classrooms, run the local signaling server.
+
 ## Environment Variables
 
 Create a local `.env` file if you need custom signaling endpoints:
@@ -51,7 +53,7 @@ VITE_SIGNALING_PORT=4444
 VITE_SIGNALING_URLS=ws://192.168.1.20:4444
 ```
 
-`VITE_SIGNALING_URLS` accepts a comma-separated list. When it is not set, the app derives a single URL from the current hostname and `VITE_SIGNALING_PORT`.
+`VITE_SIGNALING_URLS` accepts a comma-separated list. When it is not set, the app tries `ws://<current-hostname>:<VITE_SIGNALING_PORT>` first and then the default `y-webrtc` relay.
 
 ## Available Scripts
 

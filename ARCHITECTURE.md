@@ -21,7 +21,7 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
   - Reflects active editor state through Tiptap React bindings.
 - `src/services/collaboration.ts`
   - Creates the Yjs document.
-  - Connects `y-webrtc` with LAN-oriented signaling defaults.
+  - Connects `y-webrtc` with a same-host signaling endpoint first and a public fallback relay second.
   - Enables IndexedDB persistence.
   - Exposes awareness-derived presence data.
 - `src/services/fileProcessing.ts`
@@ -41,11 +41,11 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
 
 ## Signaling Strategy
 
-- Default signaling URL: `ws://<current-hostname>:4444`
+- Default signaling order: `ws://<current-hostname>:4444`, then `wss://y-webrtc-eu.fly.dev`
 - Override mechanism: `VITE_SIGNALING_URLS`
 - Local signaling process: `npm run signaling`
 
-This keeps the default setup local-network friendly instead of depending on public signaling endpoints.
+This keeps the default setup LAN-friendly while still working out of the box when the local signaling server is not running.
 
 ## File Processing Flow
 
@@ -65,5 +65,5 @@ This keeps the default setup local-network friendly instead of depending on publ
 ## Deployment Notes
 
 - The app can be served as static files.
-- Multi-device collaboration requires a reachable signaling server on the LAN.
+- Multi-device collaboration works through a reachable signaling endpoint. The app prefers a LAN-local endpoint and falls back to the official relay when available.
 - Same-browser tab collaboration can still work through broadcast channels even without the signaling server.

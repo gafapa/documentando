@@ -17,6 +17,7 @@ interface AwarenessUserState {
 }
 
 const DEFAULT_SIGNALING_PORT = '4444';
+const DEFAULT_SIGNALING_FALLBACKS = ['wss://y-webrtc-eu.fly.dev'];
 
 const generateRandomColor = () => {
   const colors = [
@@ -44,7 +45,14 @@ const getSignalingUrls = () => {
     .map((value) => value.trim())
     .filter(Boolean);
 
-  return configuredUrls?.length ? configuredUrls : [getDefaultSignalingUrl()];
+  if (configuredUrls?.length) {
+    return configuredUrls;
+  }
+
+  return Array.from(new Set([
+    getDefaultSignalingUrl(),
+    ...DEFAULT_SIGNALING_FALLBACKS,
+  ]));
 };
 
 export class CollaborationService {
