@@ -1,6 +1,6 @@
 import mammoth from 'mammoth';
-import Quill from 'quill';
 import type Html2Pdf from 'html2pdf.js';
+import type { Editor } from '@tiptap/react';
 
 let htmlDocxModulePromise: Promise<HtmlDocxModule> | null = null;
 let html2PdfPromise: Promise<typeof Html2Pdf> | null = null;
@@ -75,9 +75,9 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 export class FileProcessingService {
   /**
-   * Reads a .docx file and imports it through the Quill document model.
+   * Reads a .docx file and imports it through the Tiptap document model.
    */
-  static async importDocx(file: File, quillInstance: Quill) {
+  static async importDocx(file: File, editor: Editor) {
     if (!file) return;
 
     return new Promise<void>((resolve, reject) => {
@@ -90,8 +90,7 @@ export class FileProcessingService {
             const result = await mammoth.convertToHtml({ arrayBuffer });
             const html = result.value;
 
-            quillInstance.setContents([], 'api');
-            quillInstance.clipboard.dangerouslyPasteHTML(0, html, 'api');
+            editor.commands.setContent(html);
 
             resolve();
           } catch (err) {
@@ -108,9 +107,9 @@ export class FileProcessingService {
   /**
    * Exports the current editor HTML to a .docx file.
    */
-  static async exportDocx(quillHtml: string, filename: string = 'document.docx') {
+  static async exportDocx(editorHtml: string, filename: string = 'document.docx') {
     const htmlDocx = await loadHtmlDocx();
-    const htmlString = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${quillHtml}</body></html>`;
+    const htmlString = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${editorHtml}</body></html>`;
     const converted = htmlDocx.asBlob(htmlString);
 
     downloadBlob(converted, filename);

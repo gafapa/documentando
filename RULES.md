@@ -15,7 +15,7 @@
 
 - Preserve local-first behavior by keeping persistence in the browser through IndexedDB.
 - Prefer LAN-oriented defaults over public infrastructure for peer discovery.
-- Treat Yjs and Quill as the source of truth for editor state. Do not mutate the editor DOM directly when changing document content.
+- Treat Yjs and Tiptap as the source of truth for editor state. Do not mutate the editor DOM directly when changing document content.
 
 ## Quality Gates
 

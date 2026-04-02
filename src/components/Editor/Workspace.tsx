@@ -1,82 +1,96 @@
-import React, { useEffect, useRef } from 'react';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
-import { QuillBinding } from 'y-quill';
-import type { Awareness } from 'y-protocols/awareness';
+import React, { useEffect } from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import type { Editor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import Placeholder from '@tiptap/extension-placeholder';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import type { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
+import { TiptapToolbar } from './TiptapToolbar';
 
 interface WorkspaceProps {
   yDoc: Y.Doc;
-  awareness: Awareness;
-  onEditorReady: (quill: Quill) => void;
+  provider: WebrtcProvider;
+  user: {
+    color: string;
+    name: string;
+  };
+  onEditorReady: (editor: Editor | null) => void;
 }
 
-export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, awareness, onEditorReady }) => {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const quillRef = useRef<Quill | null>(null);
-  const bindingRef = useRef<QuillBinding | null>(null);
+export const Workspace: React.FC<WorkspaceProps> = ({ yDoc, provider, user, onEditorReady }) => {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        undoRedo: false,
+      }),
+      Collaboration.configure({
+        fragment: yDoc.getXmlFragment('content'),
+      }),
+      CollaborationCaret.configure({
+        provider,
+        user,
+      }),
+      Placeholder.configure({
+        placeholder: 'Start writing your collaborative document...',
+      }),
+      TextStyle,
+      Color,
+      Highlight.configure({
+        multicolor: true,
+      }),
+    ],
+    editorProps: {
+      attributes: {
+        class: 'tiptap-document',
+      },
+      handlePaste(_view, event) {
+        const items = event.clipboardData?.items;
+        if (!items) {
+          return false;
+        }
 
-  function handlePaste(e: ClipboardEvent) {
-    if (e.clipboardData && e.clipboardData.items) {
-      for (const item of e.clipboardData.items) {
-        if (item.type.startsWith('image/')) {
-          const file = item.getAsFile();
-          if (file && file.size > 500 * 1024) {
-            e.preventDefault();
-            e.stopPropagation();
-            alert('La imagen excede el límite de 500KB para mantener la velocidad de la red P2P.');
-            return;
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file && file.size > 500 * 1024) {
+              event.preventDefault();
+              alert('Images above 500KB are blocked to keep the P2P session responsive.');
+              return true;
+            }
           }
         }
-      }
-    }
-  }
+
+        return false;
+      },
+    },
+  }, [provider, user.color, user.name, yDoc]);
 
   useEffect(() => {
-    if (!editorRef.current || quillRef.current) {
-      return;
-    }
-
-    const editorElement = editorRef.current;
-    editorElement.innerHTML = '';
-
-    const quill = new Quill(editorElement, {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          [{ header: [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ list: 'ordered' }, { list: 'bullet' }],
-          ['blockquote', 'code-block'],
-          [{ color: [] }, { background: [] }],
-          ['clean']
-        ],
-        clipboard: {
-          matchVisual: false
-        }
-      },
-      placeholder: 'Escribe tu documento colaborativo aquí...'
-    });
-
-    quillRef.current = quill;
-    onEditorReady(quill);
-
-    const yText = yDoc.getText('quill-editor');
-    bindingRef.current = new QuillBinding(yText, quill, awareness);
-    quill.root.addEventListener('paste', handlePaste, true);
+    onEditorReady(editor);
 
     return () => {
-      quill.root.removeEventListener('paste', handlePaste, true);
-      bindingRef.current?.destroy();
-      bindingRef.current = null;
-      quillRef.current = null;
-      editorElement.innerHTML = '';
+      onEditorReady(null);
     };
-  }, [awareness, onEditorReady, yDoc]);
+  }, [editor, onEditorReady]);
+
+  if (!editor) {
+    return null;
+  }
 
   return (
-    <div className="editor-shell">
-      <div ref={editorRef} id="pdf-export-container" />
-    </div>
+    <section className="editor-shell">
+      <TiptapToolbar editor={editor} />
+      <div className="editor-frame glass-panel">
+        <div className="editor-document" id="pdf-export-container">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
+    </section>
   );
 };

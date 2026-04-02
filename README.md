@@ -5,7 +5,7 @@ PeerScribe is a local-first collaborative editor built for classroom and worksho
 ## Stack
 
 - React 19 + Vite + TypeScript
-- Quill 2 for rich-text editing
+- Tiptap 3 for rich-text editing
 - Yjs, `y-webrtc`, and `y-indexeddb` for synchronization and local persistence
 - Mammoth for DOCX import
 - `html-docx-js` and `html2pdf.js` for local export
@@ -64,7 +64,7 @@ VITE_SIGNALING_URLS=ws://192.168.1.20:4444
 
 ## Export and Import
 
-- DOCX import goes through Mammoth and is applied through the Quill document model so Yjs stays in sync.
+- DOCX import goes through Mammoth and is applied through the Tiptap document model so Yjs stays in sync.
 - DOCX and PDF export are served locally with the app. They no longer depend on runtime CDN scripts.
 
 ## Project Docs

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Quill from 'quill';
+import type { Editor } from '@tiptap/react';
 import { motion } from 'framer-motion';
 import { TopBar } from './components/Layout/TopBar';
 import { Workspace } from './components/Editor/Workspace';
@@ -15,10 +15,10 @@ function App() {
   const [collaboration, setCollaboration] = useState<CollaborationService | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
 
-  const quillRef = useRef<Quill | null>(null);
+  const editorRef = useRef<Editor | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const onEditorReady = useCallback((quill: Quill) => {
-    quillRef.current = quill;
+  const onEditorReady = useCallback((editor: Editor | null) => {
+    editorRef.current = editor;
   }, []);
 
   useEffect(() => {
@@ -61,9 +61,9 @@ function App() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && quillRef.current) {
+    if (file && editorRef.current) {
       try {
-        await FileProcessingService.importDocx(file, quillRef.current);
+        await FileProcessingService.importDocx(file, editorRef.current);
       } catch (err) {
         alert('Error importando el archivo.');
         console.error(err);
@@ -76,9 +76,9 @@ function App() {
   };
 
   const handleExportWord = async () => {
-    if (quillRef.current && activeRoom) {
+    if (editorRef.current && activeRoom) {
       try {
-        const html = quillRef.current.root.innerHTML;
+        const html = editorRef.current.getHTML();
         await FileProcessingService.exportDocx(html, `${activeRoom}.docx`);
       } catch (err) {
         alert('Error exportando el archivo.');
@@ -90,7 +90,7 @@ function App() {
   const handleExportPdf = async () => {
     const element = document.getElementById('pdf-export-container');
     if (element && activeRoom) {
-      const editorContent = element.querySelector('.ql-editor') as HTMLElement | null;
+      const editorContent = element.querySelector('.tiptap-document') as HTMLElement | null;
 
       try {
         if (editorContent) {
@@ -192,11 +192,15 @@ function App() {
         transition={{ delay: 0.2 }}
         style={{ flex: 1, padding: '0 16px', display: 'flex', justifyContent: 'center' }}
       >
-        {collaboration && collaboration.awareness && (
+        {collaboration && collaboration.awareness && collaboration.provider && (
           <Workspace
             key={collaboration.roomName}
             yDoc={collaboration.doc}
-            awareness={collaboration.awareness}
+            provider={collaboration.provider}
+            user={{
+              color: collaboration.color,
+              name: collaboration.userName,
+            }}
             onEditorReady={onEditorReady}
           />
         )}

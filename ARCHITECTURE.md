@@ -13,9 +13,12 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
 - `src/components/Layout/TopBar.tsx`
   - Displays room identity, connected users, and file actions.
 - `src/components/Editor/Workspace.tsx`
-  - Mounts Quill.
-  - Binds the editor to Yjs through `y-quill`.
+  - Mounts the Tiptap editor instance.
+  - Binds the editor to Yjs through the Tiptap collaboration extensions.
   - Enforces the clipboard image size guard.
+- `src/components/Editor/TiptapToolbar.tsx`
+  - Renders formatting controls for headings, marks, lists, highlights, and text colors.
+  - Reflects active editor state through Tiptap React bindings.
 - `src/services/collaboration.ts`
   - Creates the Yjs document.
   - Connects `y-webrtc` with LAN-oriented signaling defaults.
@@ -33,7 +36,7 @@ PeerScribe is a client-heavy React application. The browser owns the editor stat
    - a `Y.Doc` for shared text
    - a `WebrtcProvider` for peer transport
    - an `IndexeddbPersistence` store for offline recovery
-4. `Workspace.tsx` binds the room text (`quill-editor`) to Quill via `QuillBinding`.
+4. `Workspace.tsx` binds the room text fragment (`content`) to Tiptap through the collaboration extensions.
 5. Awareness state is observed and mapped to stable client IDs for the participant list.
 
 ## Signaling Strategy
@@ -49,7 +52,7 @@ This keeps the default setup local-network friendly instead of depending on publ
 - DOCX import:
   - Read the file with `FileReader`
   - Convert DOCX to HTML with Mammoth
-  - Replace Quill content through Quill APIs
+  - Replace Tiptap content through editor commands
 - DOCX export:
   - Serialize editor HTML
   - Load `html-docx-js` on demand
