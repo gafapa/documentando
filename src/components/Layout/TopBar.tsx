@@ -79,8 +79,6 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       <div className="topbar__actions">
-        <LanguageSelect inline showLabel={false} />
-
         <input
           type="file"
           accept=".docx"
@@ -123,6 +121,8 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <LogOut size={16} /> {t.leaveDocument}
         </motion.button>
+
+        <LanguageSelect inline showLabel={false} />
       </div>
     </motion.div>
   );

@@ -54,6 +54,13 @@ button {
   border-radius: 12px;
 }
 
+.app-language-corner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 120;
+}
+
 .language-picker {
   display: inline-flex;
   flex-direction: column;
@@ -504,6 +511,11 @@ button {
   .topbar__actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .app-language-corner {
+    top: 16px;
+    right: 16px;
   }
 
   .editor-shell {

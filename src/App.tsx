@@ -147,16 +147,16 @@ function AppContent() {
           padding: '24px',
         }}
       >
+        <div className="app-language-corner">
+          <LanguageSelect />
+        </div>
+
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="glass-panel"
           style={{ padding: '40px', width: '100%', maxWidth: '420px' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-            <LanguageSelect />
-          </div>
-
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h1 style={{ color: 'var(--primary-dark)', fontSize: '2rem', marginBottom: '8px' }}>
               PeerScribe
