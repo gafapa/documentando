@@ -16,13 +16,13 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
-import type { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
 import { TiptapToolbar } from './TiptapToolbar';
+import type { CollaborationProvider } from '../../services/collaboration';
 
 interface WorkspaceProps {
   yDoc: Y.Doc;
-  provider: WebrtcProvider;
+  provider: CollaborationProvider;
   user: {
     color: string;
     name: string;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Users, FileDown, FileUp, Download } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Download, FileDown, FileUp, Users } from 'lucide-react';
 import type { ConnectedUser } from '../../services/collaboration';
 
 interface TopBarProps {
@@ -10,7 +10,7 @@ interface TopBarProps {
   onExportWord: () => void;
   onExportPdf: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -46,7 +46,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(59,130,246,0.1)', padding: '6px 12px', borderRadius: '20px' }}>
           <Users size={16} color="var(--primary)" />
           <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--primary)' }}>
-            {connectedUsers.length} {connectedUsers.length === 1 ? 'estudiante' : 'estudiantes'} en línea
+            {connectedUsers.length} {connectedUsers.length === 1 ? 'estudiante' : 'estudiantes'} en linea
           </span>
         </div>
 
@@ -101,7 +101,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             color: 'var(--text-secondary)', fontWeight: 500
           }}
         >
-          <FileUp size={16} /> Importar Docx
+          <FileUp size={16} /> Importar DOCX
         </motion.button>
 
         <motion.button

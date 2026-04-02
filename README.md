@@ -1,24 +1,26 @@
 # PeerScribe
 
-PeerScribe is a local-first collaborative editor built for classroom and workshop environments that operate on a LAN without relying on cloud databases. The application uses Yjs CRDTs, WebRTC peer networking, and IndexedDB persistence so each participant can keep working from the browser even when the internet is unavailable.
+PeerScribe is a static, local-first collaborative editor for classrooms and workshops. It runs as a client-side React application, keeps the document in Yjs, persists locally with IndexedDB, and uses PeerJS Cloud as the rendezvous layer for browser-to-browser collaboration.
 
 ## Stack
 
 - React 19 + Vite + TypeScript
 - Tiptap 3 for rich-text editing
-- Yjs, `y-webrtc`, and `y-indexeddb` for synchronization and local persistence
+- Yjs + `y-protocols` for CRDT state and awareness
+- PeerJS for peer discovery and WebRTC data channels
+- `y-indexeddb` for browser persistence
 - Mammoth for DOCX import
 - `html-docx-js` and `html2pdf.js` for local export
-- Framer Motion and custom CSS for the interface
 
 ## How Collaboration Works
 
-1. Each room maps to a Yjs document namespace.
-2. The browser stores document updates in IndexedDB for offline recovery.
-3. Peers exchange updates through `y-webrtc`.
-4. Presence information is shared through Yjs awareness and rendered in the top bar.
+1. Each room maps to a Yjs document namespace and a deterministic PeerJS host ID.
+2. The first browser to claim the room host ID becomes the room hub for that session.
+3. Later browsers connect to that host through PeerJS Cloud and exchange document updates over WebRTC data channels.
+4. Yjs awareness is forwarded through the same peer mesh so cursors and participant presence stay in sync.
+5. IndexedDB stores the room locally for offline recovery on each device.
 
-Peer discovery is designed for local deployment. When the app runs on a LAN host, the client first tries a signaling server on that same host at port `4444`, then falls back to the official `y-webrtc` relay if it is reachable. On `localhost`, it skips the local WebSocket attempt unless you configure `VITE_SIGNALING_URLS` explicitly. You can override all defaults with `VITE_SIGNALING_URLS`.
+The application is compatible with static hosting such as Nginx because it does not require custom server code in the app deployment. The collaboration rendezvous step depends on a reachable PeerJS server. By default, the app uses PeerJS Cloud.
 
 ## Local Development
 
@@ -28,55 +30,54 @@ Install dependencies:
 npm install
 ```
 
-Start the WebRTC signaling server in one terminal:
+Start the Vite app:
 
 ```bash
-npm run signaling
+npm run dev
 ```
 
-Start the Vite app in another terminal and expose it to the LAN:
+Expose it to the LAN when you want other devices to join:
 
 ```bash
 npm run dev:host
 ```
 
-The editor will be available on the host machine and other devices on the same network. Tabs in the same browser can also synchronize through broadcast channels.
-
-If you do not run `npm run signaling`, collaboration can still work through the fallback relay when internet access is available. For LAN-only or offline classrooms, run the local signaling server.
-
 ## Environment Variables
 
-Create a local `.env` file if you need custom signaling endpoints:
+PeerJS Cloud works without extra configuration. If you want to point the client to a custom PeerServer later, create a local `.env` file:
 
 ```bash
-VITE_SIGNALING_PORT=4444
-VITE_SIGNALING_URLS=ws://192.168.1.20:4444
+VITE_PEER_HOST=0.peerjs.com
+VITE_PEER_PORT=443
+VITE_PEER_PATH=/
+VITE_PEER_SECURE=true
 ```
 
-`VITE_SIGNALING_URLS` accepts a comma-separated list. When it is not set, the app uses `ws://<current-hostname>:<VITE_SIGNALING_PORT>` only for non-localhost hosts and otherwise falls back directly to the default `y-webrtc` relay.
+If `VITE_PEER_HOST` is not set, PeerJS defaults are used automatically.
 
 ## Available Scripts
 
 - `npm run dev` starts Vite for local development.
 - `npm run dev:host` starts Vite on `0.0.0.0` for LAN access.
-- `npm run signaling` starts the local `y-webrtc` signaling server on port `4444`.
 - `npm run build` creates the production bundle.
 - `npm run preview` serves the production build locally.
+- `npm run preview:host` serves the production build on the LAN.
 - `npm run lint` runs ESLint.
 
-## Export and Import
+## Import and Export
 
-- DOCX import goes through Mammoth and is applied through the Tiptap document model so Yjs stays in sync.
-- DOCX and PDF export are served locally with the app. They no longer depend on runtime CDN scripts.
+- DOCX import goes through Mammoth and replaces content through the Tiptap command layer.
+- DOCX export is served from the app bundle and generated locally in the browser.
+- PDF export is generated locally from the editor DOM.
 
 ## Editing Features
 
-- Headings, inline formatting, code blocks, quotes, highlights, and text colors
-- Text alignment, links, horizontal rules, ordered lists, bullet lists, and task lists
-- Basic collaborative tables with insert, row, column, and delete controls
+- Headings, block quotes, code blocks, inline code, highlights, and text color
+- Links, alignment controls, horizontal rules, lists, and task lists
+- Collaborative tables with insert, row, column, and delete controls
 
 ## Project Docs
 
 - `README.md`: setup and operational overview
-- `ARCHITECTURE.md`: system design and runtime flow
-- `RULES.md`: repository and documentation rules
+- `ARCHITECTURE.md`: runtime design and collaboration flow
+- `RULES.md`: repository and maintenance rules

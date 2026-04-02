@@ -9,8 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preview:host": "vite preview --host 0.0.0.0",
-    "signaling": "node ./node_modules/y-webrtc/bin/server.js"
+    "preview:host": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@tiptap/extension-collaboration": "^3.22.1",
@@ -35,10 +34,11 @@
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.7.0",
     "mammoth": "^1.12.0",
+    "peerjs": "^1.5.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "y-indexeddb": "^9.0.12",
-    "y-webrtc": "^10.3.0",
+    "y-protocols": "^1.0.6",
     "yjs": "^13.6.30"
   },
   "devDependencies": {
